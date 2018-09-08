@@ -1,0 +1,36 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vsshell="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+
+
+             xmlns:local="clr-namespace:ACST" x:Class="ACST.AtCoder_Sample_TesterControl"
+             Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
+             Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+             mc:Ignorable="d"
+             d:DesignHeight="480" d:DesignWidth="300"
+             x:Name="MyToolWindow">
+
+	<Grid>
+		<StackPanel Orientation="Vertical">
+			<TextBlock Margin="2" HorizontalAlignment="Center"><Run Text="AtCoder Sample Tester"/></TextBlock>
+			<TextBox x:Name="problempage" Margin="10" Height="24" TextWrapping="Wrap" Text="" TextChanged="TextBox_TextChanged" local:PlaceHolderBehavior.PlaceHolderText="https://beta.atcoder.jp/contests/abc107/tasks/abc107_a"/>
+			<Button Content="check" Click="button1_Click" Width="120" Height="80" x:Name="button1"/>
+			<Canvas
+			  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			  Width="290" Height="300"
+			  >
+				<Button Content="copy input" Click="button_copyinput_Click" Width="55" Height="24" x:Name="button_copyinput" FontSize="10"/>
+				<TextBox x:Name="copyinputarg1" Height="24" TextWrapping="Wrap" Text="0" Canvas.Top="30" Width="55"/>
+				<Button Canvas.Top="100" Content="copy output" Click="button_copyoutput_Click" Width="55" Height="24" x:Name="button_copyoutput" FontSize="9"/>
+				<TextBox x:Name="copyinputarg2" Height="24" TextWrapping="Wrap" Text="0" Canvas.Top="130" Width="55"/>
+				<ScrollViewer Canvas.Left="55" Canvas.Top="0" Height="200" Width="220" Margin="10" BorderBrush="Black">
+					<TextBlock x:Name="htmltest" HorizontalAlignment="Left" Margin="24,0,0,0" TextWrapping="Wrap"/>
+				</ScrollViewer>
+			</Canvas>
+		</StackPanel>
+	</Grid>
+</UserControl>
