@@ -1,19 +1,23 @@
-﻿namespace ACST
+﻿using System.IO;
+
+
+namespace ACST
 {
 	using System.Diagnostics.CodeAnalysis;
-	using System.Windows;
 	using System.Windows.Controls;
 	using HtmlAgilityPack;
 	using System.Collections.Generic;
 	using System;
 	using System.Net.Http;
 	using System.Threading.Tasks;
+	using System.Windows.Forms;
+	using System.Windows;
 
 
 	/// <summary>
 	/// Interaction logic for AtCoder_Sample_TesterControl.
 	/// </summary>
-	public partial class AtCoder_Sample_TesterControl : UserControl
+	public partial class AtCoder_Sample_TesterControl : System.Windows.Controls.UserControl
 	{
 		List<string> testin;
 		List<string> testout;
@@ -40,7 +44,7 @@
 		private void button1_Click(object sender, RoutedEventArgs e)
 		{
 			HtmlWeb web = new HtmlWeb();
-			HtmlDocument doc;
+			HtmlAgilityPack.HtmlDocument doc;
 			try
 			{
 				doc = web.Load(problempage.Text);
@@ -70,14 +74,17 @@
 				htmltest.Text += "out[" + i.ToString() + "]:\n";
 				htmltest.Text += nodes[2 * i + 1].InnerText + "\n";
 			}
+
+			//kkari
+			htmltest.Text += "sample0: "+Test(testin[0], testout[0], 0);
 		}
 
 		private void button_copyinput_Click(object sender, RoutedEventArgs e)
 		{
 			int idx = 0;
 			int.TryParse(copyinputarg1.Text, out idx);
-			if(idx<casenum/2) Clipboard.SetDataObject(testin[idx], true);
-			else MessageBox.Show(
+			if(idx<casenum/2) System.Windows.Clipboard.SetDataObject(testin[idx], true);
+			else System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "index is too big"),
 				"AtCoder Sample Tester");
 		}
@@ -86,8 +93,8 @@
 		{
 			int idx = 0;
 			int.TryParse(copyinputarg2.Text, out idx);
-			if (idx < casenum) Clipboard.SetDataObject(testout[idx], true);
-			else MessageBox.Show(
+			if (idx < casenum) System.Windows.Clipboard.SetDataObject(testout[idx], true);
+			else System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "index is too big"),
 				"AtCoder Sample Tester");
 		}
@@ -132,7 +139,7 @@
 			//get csrf_token from loginpage
 
 			//HtmlWeb web = new HtmlWeb();
-			HtmlDocument doc = new HtmlDocument();
+			HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
 			try
 			{
 				doc.LoadHtml(await client.GetStringAsync(loginurl));
@@ -140,7 +147,7 @@
 			}
 			catch
 			{
-				MessageBox.Show(
+				System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder login failed(0)"),
 				"AtCoder Sample Tester");
 				return;
@@ -148,7 +155,7 @@
 			HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//input[@name=\"csrf_token\"]");
 			if (nodes == null)
 			{
-				MessageBox.Show(
+				System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder login failed(1)"),
 				"AtCoder Sample Tester");
 				return;
@@ -160,7 +167,7 @@
 			senddata.Add("password", passwordBox.Password);
 			senddata.Add("csrf_token", csrf_token);
 			var payload = new FormUrlEncodedContent(senddata);
-			MessageBox.Show(
+			System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "username:{0}, password:{1}, csrf_token:{2}",senddata["username"],senddata["password"],senddata["csrf_token"]),
 				"AtCoder Sample Tester");
 
@@ -198,7 +205,17 @@
 		}
 
 		public void SubmitURLAsync(string url, string source, string langid = "3003"){
-			
+			string[] elem = url.Split('/');
+			string contestid, problemid;
+			if (elem.Length < 4) return;
+			if (elem[elem.Length-1]==""){
+				problemid = elem[elem.Length - 2];
+				contestid = elem[elem.Length - 4];
+			}else{
+				problemid = elem[elem.Length - 1];
+				contestid = elem[elem.Length - 3];
+			}
+			SubmitAsync(contestid, problemid, source);
 		}
 
 		public async Task SubmitAsync(string contestid, string problemid, string source, string langid = "3003")
@@ -209,7 +226,7 @@
 			//get csrf_token from loginpage
 
 			//HtmlWeb web = new HtmlWeb();
-			HtmlDocument doc = new HtmlDocument();
+			HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
 			try
 			{
 				doc.LoadHtml(await client.GetStringAsync(submiturl));
@@ -217,7 +234,7 @@
 			}
 			catch
 			{
-				MessageBox.Show(
+				System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder submit failed(0)"),
 				"AtCoder Sample Tester");
 				return;
@@ -225,7 +242,7 @@
 			HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//input[@name=\"csrf_token\"]");
 			if (nodes == null)
 			{
-				MessageBox.Show(
+				System.Windows.MessageBox.Show(
 				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder submit failed(1)"),
 				"AtCoder Sample Tester");
 				return;
@@ -257,14 +274,81 @@
 			}
 		}
 
-		public async Task SubmitURLAsync(string contesturl, string source, int langid=3003){
-			Dictionary<string, string> senddata = new Dictionary<string, string>(10);
-		}
-
 		private void Button_submittest_Click(object sender, RoutedEventArgs e)
 		{
-			string source = "#include \"bits/stdc++.h\"\nusing namespace std;\nint main(){\n  int a,b;cin>>a>>b;\n  cout<<--a*--b;\n}";
-			SubmitAsync("abc106", "abc106_a", source);
+			string source = "";//"#include \"bits/stdc++.h\"\nusing namespace std;\nint main(){\n  int a,b;cin>>a>>b;\n  cout<<--a*--b;\n}";
+			FileStream fs = new FileStream(@"main.cpp",
+			FileMode.Open, FileAccess.Read);
+			StreamReader sr = new StreamReader(fs);
+			if (sourcebeginpos.Text == "")//all
+			{
+				source = sr.ReadToEnd();
+			}
+			else//begin=>end
+			{
+				Int64 beginp=0, endp=int.MaxValue;
+				try
+				{
+					beginp = Int64.Parse(sourcebeginpos.Text) - 1;
+					endp = Int64.Parse(sourceendpos.Text) - 1;
+				}catch{
+					DialogResult res = System.Windows.Forms.MessageBox.Show("Invalid input.(not a number) Do you want to submit the whole source code?",
+						"AtCoder Sample Tester", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+					if (res == DialogResult.Yes)
+					{
+						source = sr.ReadToEnd();
+						fs.Close(); sr.Close();
+						SubmitURLAsync(problempage.Text, source);
+					}
+					return;
+				}
+				int pos = 0;
+				for (; pos < beginp&&!sr.EndOfStream; ++pos) sr.ReadLine();
+				for (; pos < endp&& !sr.EndOfStream; ++pos) source += sr.ReadLine() + '\n';
+			}
+
+			fs.Close();sr.Close();
+
+			SubmitURLAsync(problempage.Text, source);
+		}
+
+		public string Test(string inp,string outp,int num){
+			string command = @"Debug\ac3.exe";
+
+			//DirectoryUtils.SafeCreateDirectory("ACST");
+			//File.WriteAllText("ACST\\in" + num + ".txt", inp);
+
+			System.Diagnostics.ProcessStartInfo psInfo = new System.Diagnostics.ProcessStartInfo();
+
+			psInfo.FileName = command;
+			//psInfo.Arguments = @"0< ""ACST\in" + num + @".txt"""; ;//kari
+			//psInfo.CreateNoWindow = true;
+			psInfo.UseShellExecute = false;
+			psInfo.RedirectStandardInput = true;
+
+			psInfo.RedirectStandardOutput = true;
+
+			System.Diagnostics.Process p = System.Diagnostics.Process.Start(psInfo);
+			inp = inp.Replace("\r\n", "\n");
+			string[] arr = inp.Split('\n');
+			foreach(string line in arr){
+				p.StandardInput.WriteLine(line);
+			}
+			p.StandardInput.Close();
+			p.WaitForExit(3000);
+			if (!p.HasExited) {
+				p.Kill();
+				p.Close();
+				return "TLE";
+			}
+			
+			string output = p.StandardOutput.ReadToEnd();
+
+			output = output.Replace("\r\r\n", "\r\n");
+			p.Close();
+			if (outp == output) return "AC";
+			else return "WA";
+			//return "AC";
 		}
 	}
 }

@@ -37,6 +37,8 @@
 				<Label x:Name="logstatus"			Canvas.Top="275" Canvas.Left="0"	Height="24" Width="200" Content="not logged in" Cursor=""/>
 			</Canvas>
 			<Button Content="submittest" HorizontalAlignment="Left" Height="42" Margin="26,0,0,0" Width="78" Click="Button_submittest_Click"/>
+			<TextBox x:Name="sourcebeginpos"  HorizontalAlignment="Left" Height="32" Margin="10,0,0,0" TextWrapping="Wrap" Width="100" InputMethod.IsInputMethodEnabled="False"/>
+			<TextBox x:Name="sourceendpos"	HorizontalAlignment="Left" Height="32" Margin="10,0,0,0" TextWrapping="Wrap" Width="100" InputMethod.IsInputMethodEnabled="False"/>
 		</StackPanel>
 	</Grid>
 </UserControl>
