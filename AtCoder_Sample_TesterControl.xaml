@@ -10,27 +10,33 @@
              Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
              Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
              mc:Ignorable="d"
-             d:DesignHeight="480" d:DesignWidth="300"
+             d:DesignHeight="600" d:DesignWidth="300"
              x:Name="MyToolWindow">
 
 	<Grid>
 		<StackPanel Orientation="Vertical">
 			<TextBlock Margin="2" HorizontalAlignment="Center"><Run Text="AtCoder Sample Tester"/></TextBlock>
-			<TextBox x:Name="problempage" Margin="10" Height="24" TextWrapping="Wrap" Text="" TextChanged="TextBox_TextChanged" local:PlaceHolderBehavior.PlaceHolderText="https://beta.atcoder.jp/contests/abc107/tasks/abc107_a"/>
+			<TextBox x:Name="problempage" Margin="10" Height="24" TextWrapping="Wrap" Text="" TextChanged="TextBox_TextChanged" local:PlaceHolderBehavior.PlaceHolderText="https://beta.atcoder.jp/contests/abc107/tasks/abc107_a" Background="White"/>
 			<Button Content="check" Click="button1_Click" Width="120" Height="80" x:Name="button1"/>
 			<Canvas
 			  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 			  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			  Width="290" Height="300"
 			  >
-				<Button Content="copy input" Click="button_copyinput_Click" Width="55" Height="24" x:Name="button_copyinput" FontSize="10"/>
-				<TextBox x:Name="copyinputarg1" Height="24" TextWrapping="Wrap" Text="0" Canvas.Top="30" Width="55"/>
-				<Button Canvas.Top="100" Content="copy output" Click="button_copyoutput_Click" Width="55" Height="24" x:Name="button_copyoutput" FontSize="9"/>
-				<TextBox x:Name="copyinputarg2" Height="24" TextWrapping="Wrap" Text="0" Canvas.Top="130" Width="55"/>
-				<ScrollViewer Canvas.Left="55" Canvas.Top="0" Height="200" Width="220" Margin="10" BorderBrush="Black">
+				<Button							Canvas.Top="0"					Height="24"		Width="55"	Content="copy input"	Click="button_copyinput_Click" x:Name="button_copyinput" FontSize="10"/>
+				<TextBox x:Name="copyinputarg1" Canvas.Top="30"					Height="24"		Width="55"	TextWrapping="Wrap" Text="0"/>
+				<Button							Canvas.Top="100"				Height="24"		Width="55"	Content="copy output" Click="button_copyoutput_Click" x:Name="button_copyoutput" FontSize="9"/>
+				<TextBox x:Name="copyinputarg2"	Canvas.Top="130"				Height="24"		Width="55"	TextWrapping="Wrap" Text="0"/>
+				<ScrollViewer					Canvas.Top="0" Canvas.Left="55"	Height="200"	Width="220" Margin="10" BorderBrush="Black">
 					<TextBlock x:Name="htmltest" HorizontalAlignment="Left" Margin="24,0,0,0" TextWrapping="Wrap"/>
 				</ScrollViewer>
+				<TextBox x:Name="usernameBox"		Canvas.Top="210" Canvas.Left="0"	Height="24" Width="200" Margin="10" TextWrapping="Wrap" Text="" local:PlaceHolderBehavior.PlaceHolderText="username" Background="White"/>
+				<PasswordBox x:Name="passwordBox"	Canvas.Top="240" Canvas.Left="0"	Height="24" Width="200" PasswordChar="*" Margin="10" Background="White"/>
+				<Button Content="sign in"		Canvas.Top="220" Canvas.Left="220"	Height="24" Width="50" Click="Button_signin_Click" />
+				<Button Content="sign out"			Canvas.Top="250" Canvas.Left="220"	Height="24" Width="50" Click="Button_signout_Click"/>
+				<Label x:Name="logstatus"			Canvas.Top="275" Canvas.Left="0"	Height="24" Width="200" Content="not logged in" Cursor=""/>
 			</Canvas>
+			<Button Content="submittest" HorizontalAlignment="Left" Height="42" Margin="26,0,0,0" Width="78" Click="Button_submittest_Click"/>
 		</StackPanel>
 	</Grid>
 </UserControl>

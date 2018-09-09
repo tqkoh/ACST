@@ -52,7 +52,7 @@ namespace ACST
 				}
 				else
 				{
-					textBox.Background = new SolidColorBrush(Colors.Transparent);
+					textBox.Background = new SolidColorBrush(Colors.White);
 				}
 			};
 		}

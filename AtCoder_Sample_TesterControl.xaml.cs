@@ -5,6 +5,9 @@
 	using System.Windows.Controls;
 	using HtmlAgilityPack;
 	using System.Collections.Generic;
+	using System;
+	using System.Net.Http;
+	using System.Threading.Tasks;
 
 
 	/// <summary>
@@ -15,6 +18,7 @@
 		List<string> testin;
 		List<string> testout;
 		int casenum;
+		private static readonly HttpClient client = new HttpClient();
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AtCoder_Sample_TesterControl"/> class.
 		/// </summary>
@@ -50,6 +54,10 @@
 
 
 			var nodes = doc.DocumentNode.SelectNodes("//span[@class=\"lang-ja\"]/div/section/pre");
+			if(nodes==null){
+				htmltest.Text = "That page is not a task page";
+				return;
+			}
 			testin.Clear();
 			testout.Clear();
 			htmltest.Text = "";
@@ -87,6 +95,176 @@
 		private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
 
+		}
+
+		//private static async Task Login1(){
+			
+		//}
+
+		private void Button_signin_Click(object sender, RoutedEventArgs e){
+			Button_signin_ClickTask(sender, e);
+		}
+
+		public async Task Button_signin_ClickTask(object sender, RoutedEventArgs e){
+			string loginurl = "https://beta.atcoder.jp/login";
+			string acurl = "https://beta.atcoder.jp";
+
+			//System.Net.WebClient wc = new System.Net.WebClient();
+			
+
+			//wc.Headers.Add("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.");
+			//wc.Headers.Add("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)");
+			//wc.Headers.Add("Accept-Encoding: gzip, deflate, br");
+			//wc.Headers.Add("Accept-Language: ja,en-US;q=0.9,en;q=0.8,und;q=0.7");
+			//wc.Headers.Add("Cache-Control: max-age=0");
+			//wc.Headers.Add("Upgrade-Insecure-Requests: 1");
+
+			//wc.Headers.Add("User-Agent: Other");
+
+			//NameValueCollectionの作成
+			//System.Collections.Specialized.NameValueCollection senddata =
+			//	new System.Collections.Specialized.NameValueCollection();
+
+
+			//send login data
+
+			Dictionary<string,string> senddata = new Dictionary<string, string>(10);
+			//get csrf_token from loginpage
+
+			//HtmlWeb web = new HtmlWeb();
+			HtmlDocument doc = new HtmlDocument();
+			try
+			{
+				doc.LoadHtml(await client.GetStringAsync(loginurl));
+				//doc = web.Load(loginurl);
+			}
+			catch
+			{
+				MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder login failed(0)"),
+				"AtCoder Sample Tester");
+				return;
+			}
+			HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//input[@name=\"csrf_token\"]");
+			if (nodes == null)
+			{
+				MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder login failed(1)"),
+				"AtCoder Sample Tester");
+				return;
+			}
+
+			string csrf_token = nodes[0].GetAttributeValue("value", "");
+			//append senddata
+			senddata.Add("username", usernameBox.Text);
+			senddata.Add("password", passwordBox.Password);
+			senddata.Add("csrf_token", csrf_token);
+			var payload = new FormUrlEncodedContent(senddata);
+			MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "username:{0}, password:{1}, csrf_token:{2}",senddata["username"],senddata["password"],senddata["csrf_token"]),
+				"AtCoder Sample Tester");
+
+
+			System.Net.Http.HttpResponseMessage resData;
+			//System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> resData;
+			//send data
+			try
+			{
+				resData = await Task.Run(() => client.PostAsync(loginurl, payload));//await
+				//resData = wc.UploadValues(loginurl, senddata);
+			}
+			catch (Exception ex)
+			{
+				logstatus.Content = ex.Message;
+				//string str = wc.DownloadString(loginurl);
+				//logstatus.Content = str;
+				return;
+			}
+
+
+
+			//wc.Dispose();
+
+			//
+			//string resText = System.Text.Encoding.UTF8.GetString(resData);
+			//logstatus.Content = ;
+			string responseString = await Task.Run(() => client.GetStringAsync(loginurl));
+			//htmltest.Text = responseString;
+			logstatus.Content = usernameBox.Text;
+		}
+
+		private void Button_signout_Click(object sender, RoutedEventArgs e){
+			
+		}
+
+		public void SubmitURLAsync(string url, string source, string langid = "3003"){
+			
+		}
+
+		public async Task SubmitAsync(string contestid, string problemid, string source, string langid = "3003")
+		{
+			string submiturl = string.Format(System.Globalization.CultureInfo.CurrentUICulture, "https://beta.atcoder.jp/contests/{0}/submit",contestid);
+
+
+			//get csrf_token from loginpage
+
+			//HtmlWeb web = new HtmlWeb();
+			HtmlDocument doc = new HtmlDocument();
+			try
+			{
+				doc.LoadHtml(await client.GetStringAsync(submiturl));
+				//doc = web.Load(loginurl);
+			}
+			catch
+			{
+				MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder submit failed(0)"),
+				"AtCoder Sample Tester");
+				return;
+			}
+			HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//input[@name=\"csrf_token\"]");
+			if (nodes == null)
+			{
+				MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "atcoder submit failed(1)"),
+				"AtCoder Sample Tester");
+				return;
+			}
+
+			string csrf_token = nodes[0].GetAttributeValue("value", "");
+
+			Dictionary<string, string> senddata = new Dictionary<string, string>(4);
+			senddata["data.TaskScreenName"] = problemid;
+			senddata["data.LanguageId"] = langid;
+			senddata["sourceCode"] = source;
+			senddata["csrf_token"] = csrf_token;
+			var payload = new FormUrlEncodedContent(senddata);
+
+			System.Net.Http.HttpResponseMessage resData;
+			//System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> resData;
+			//send data
+			try
+			{
+				resData = await Task.Run(() => client.PostAsync(submiturl, payload));//await
+																					//resData = wc.UploadValues(loginurl, senddata);
+			}
+			catch (Exception ex)
+			{
+				logstatus.Content = ex.Message;
+				//string str = wc.DownloadString(loginurl);
+				//logstatus.Content = str;
+				return;
+			}
+		}
+
+		public async Task SubmitURLAsync(string contesturl, string source, int langid=3003){
+			Dictionary<string, string> senddata = new Dictionary<string, string>(10);
+		}
+
+		private void Button_submittest_Click(object sender, RoutedEventArgs e)
+		{
+			string source = "#include \"bits/stdc++.h\"\nusing namespace std;\nint main(){\n  int a,b;cin>>a>>b;\n  cout<<--a*--b;\n}";
+			SubmitAsync("abc106", "abc106_a", source);
 		}
 	}
 }
