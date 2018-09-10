@@ -12,6 +12,7 @@ namespace ACST
 	using System.Threading.Tasks;
 	using System.Windows.Forms;
 	using System.Windows;
+	using System.Windows.Documents;
 
 
 	/// <summary>
@@ -21,6 +22,7 @@ namespace ACST
 	{
 		List<string> testin;
 		List<string> testout;
+		List<string> results;
 		int casenum;
 		private static readonly HttpClient client = new HttpClient();
 		/// <summary>
@@ -28,10 +30,39 @@ namespace ACST
 		/// </summary>
 		public AtCoder_Sample_TesterControl()
 		{
-			this.InitializeComponent();
+			InitializeComponent();
 			testin = new List<string>();
 			testout = new List<string>();
+			results = new List<string>();
 			casenum = 0;
+
+			try
+			{
+				using (StreamReader r = new StreamReader(@"ACSTuser.dat"))
+				{
+					usernameBox.Text = r.ReadLine();
+					passwordBox.Password = r.ReadLine();
+				}
+				Button_signin_ClickTask(null,null);
+			}catch{
+				System.Windows.MessageBox.Show(
+					string.Format(System.Globalization.CultureInfo.CurrentUICulture, "First use? Login atcoder on the textbox below"),
+					"AtCoder Sample Tester");
+			}
+			try{
+				using (StreamReader c = new StreamReader(@"ACSTconfig.dat"))
+				{
+					string lin;
+					lin = c.ReadLine();
+					sourcebeginpos.Text = lin;
+					lin = c.ReadLine();
+					sourceendpos.Text = lin;
+					lin = c.ReadLine();
+					cppfile.Text = lin;
+					lin = c.ReadLine();
+					exefile.Text = lin;
+				}
+			}catch{ }
 		}
 
 		/// <summary>
@@ -41,7 +72,7 @@ namespace ACST
 		/// <param name="e">The event args.</param>
 		[SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions", Justification = "Sample code")]
 		[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Default event handler naming pattern")]
-		private void button1_Click(object sender, RoutedEventArgs e)
+		private void CheckOnly_Click(object sender, RoutedEventArgs e)
 		{
 			HtmlWeb web = new HtmlWeb();
 			HtmlAgilityPack.HtmlDocument doc;
@@ -76,10 +107,94 @@ namespace ACST
 			}
 
 			//kkari
-			htmltest.Text += "sample0: "+Test(testin[0], testout[0], 0);
+			//htmltest.Text += "sample0: "+Test(testin[0], testout[0], 0);
+			results.Clear();
+			outputResult.SelectAll();
+			outputResult.Selection.Text = "";
+
+			for (int i=0;i<testin.Count; ++i){
+				TextRange defRange = new TextRange(outputResult.Document.ContentEnd, outputResult.Document.ContentEnd);
+				defRange.Text = "sample" + (i + 1).ToString() + ": ";
+				defRange.ApplyPropertyValue(TextElement.ForegroundProperty, System.Windows.Media.Brushes.Black);
+				defRange.ApplyPropertyValue(TextElement.BackgroundProperty, System.Windows.Media.Brushes.White);
+				defRange.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Regular);
+				TextRange resultRange = new TextRange(outputResult.Document.ContentEnd, outputResult.Document.ContentEnd);
+				resultRange.Text = Test(testin[i], testout[i], i);
+				results.Add(resultRange.Text);
+				resultRange.ApplyPropertyValue(TextElement.ForegroundProperty, System.Windows.Media.Brushes.White);
+				if(resultRange.Text==" AC ")resultRange.ApplyPropertyValue(TextElement.BackgroundProperty, System.Windows.Media.Brushes.LimeGreen);
+				else if(resultRange.Text == " WA " || resultRange.Text == " TLE ") resultRange.ApplyPropertyValue(TextElement.BackgroundProperty, System.Windows.Media.Brushes.Orange);
+				else if (resultRange.Text == " FE ") resultRange.ApplyPropertyValue(TextElement.BackgroundProperty, System.Windows.Media.Brushes.Red);
+				resultRange.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
+				outputResult.AppendText("\n");
+			}
 		}
 
-		private void button_copyinput_Click(object sender, RoutedEventArgs e)
+		private void SubmitOnly_Click(object sender, RoutedEventArgs e)
+		{
+			string source = "";//"#include \"bits/stdc++.h\"\nusing namespace std;\nint main(){\n  int a,b;cin>>a>>b;\n  cout<<--a*--b;\n}";
+			FileStream fs;
+			StreamReader sr;
+
+			try
+			{
+				fs = new FileStream(cppfile.Text,//kari
+						FileMode.Open, FileAccess.Read);
+				sr = new StreamReader(fs);
+
+			}
+			catch
+			{
+				System.Windows.MessageBox.Show(
+					string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Source file not found. Go to AtCoder to sumbit directly or check the file path on the config below."),
+					"AtCoder Sample Tester");
+				return;
+			}
+			
+			if (sourcebeginpos.Text == "")//all
+			{
+				source = sr.ReadToEnd();
+			}
+			else//begin=>end
+			{
+				Int64 beginp = 0, endp = int.MaxValue;
+				try
+				{
+					beginp = Int64.Parse(sourcebeginpos.Text) - 1;
+					endp = Int64.Parse(sourceendpos.Text) - 1;
+				}
+				catch
+				{
+					DialogResult res = System.Windows.Forms.MessageBox.Show("Invalid input.(not a number) Do you want to submit the whole source code?",
+						"AtCoder Sample Tester", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+					if (res == DialogResult.Yes)
+					{
+						source = sr.ReadToEnd();
+						fs.Close(); sr.Close();
+						SubmitURLAsync(problempage.Text, source);
+					}
+					return;
+				}
+				int pos = 0;
+				for (; pos < beginp && !sr.EndOfStream; ++pos) sr.ReadLine();
+				for (; pos < endp && !sr.EndOfStream; ++pos) source += sr.ReadLine() + '\n';
+			}
+
+			fs.Close(); sr.Close();
+
+			SubmitURLAsync(problempage.Text, source);
+		}
+
+		private void CheckAndSubmit_Click(object sender, RoutedEventArgs e){
+			CheckOnly_Click(sender, e);
+			bool ok=true;
+			for(int i=0;i<results.Count;++i){
+				if (results[i] != " AC ") ok = false;
+			}
+			if (ok) SubmitOnly_Click(sender, e);
+		}
+
+		private void Button_copyinput_Click(object sender, RoutedEventArgs e)
 		{
 			int idx = 0;
 			int.TryParse(copyinputarg1.Text, out idx);
@@ -89,7 +204,7 @@ namespace ACST
 				"AtCoder Sample Tester");
 		}
 
-		private void button_copyoutput_Click(object sender, RoutedEventArgs e)
+		private void Button_copyoutput_Click(object sender, RoutedEventArgs e)
 		{
 			int idx = 0;
 			int.TryParse(copyinputarg2.Text, out idx);
@@ -167,9 +282,9 @@ namespace ACST
 			senddata.Add("password", passwordBox.Password);
 			senddata.Add("csrf_token", csrf_token);
 			var payload = new FormUrlEncodedContent(senddata);
-			System.Windows.MessageBox.Show(
-				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "username:{0}, password:{1}, csrf_token:{2}",senddata["username"],senddata["password"],senddata["csrf_token"]),
-				"AtCoder Sample Tester");
+			//System.Windows.MessageBox.Show(
+			//	string.Format(System.Globalization.CultureInfo.CurrentUICulture, "username:{0}, password:{1}, csrf_token:{2}",senddata["username"],senddata["password"],senddata["csrf_token"]),
+			//	"AtCoder Sample Tester");
 
 
 			System.Net.Http.HttpResponseMessage resData;
@@ -197,11 +312,25 @@ namespace ACST
 			//logstatus.Content = ;
 			string responseString = await Task.Run(() => client.GetStringAsync(loginurl));
 			//htmltest.Text = responseString;
-			logstatus.Content = usernameBox.Text;
+			logstatus.Content = "logged in with "+usernameBox.Text;
+
+			using (StreamWriter w = new StreamWriter(@"ACSTuser.dat"))
+			{
+				await w.WriteLineAsync(usernameBox.Text);
+				await w.WriteLineAsync(passwordBox.Password);
+			}
+
+
 		}
 
-		private void Button_signout_Click(object sender, RoutedEventArgs e){
-			
+		private void Button_save_Click(object sender, RoutedEventArgs e){
+			using (StreamWriter w = new StreamWriter(@"ACSTconfig.dat",false))
+			{
+				w.WriteLine(sourcebeginpos.Text);
+				w.WriteLine(sourceendpos.Text);
+				w.WriteLine(cppfile.Text);
+				w.WriteLine(exefile.Text);
+			}
 		}
 
 		public void SubmitURLAsync(string url, string source, string langid = "3003"){
@@ -274,46 +403,10 @@ namespace ACST
 			}
 		}
 
-		private void Button_submittest_Click(object sender, RoutedEventArgs e)
-		{
-			string source = "";//"#include \"bits/stdc++.h\"\nusing namespace std;\nint main(){\n  int a,b;cin>>a>>b;\n  cout<<--a*--b;\n}";
-			FileStream fs = new FileStream(@"main.cpp",
-			FileMode.Open, FileAccess.Read);
-			StreamReader sr = new StreamReader(fs);
-			if (sourcebeginpos.Text == "")//all
-			{
-				source = sr.ReadToEnd();
-			}
-			else//begin=>end
-			{
-				Int64 beginp=0, endp=int.MaxValue;
-				try
-				{
-					beginp = Int64.Parse(sourcebeginpos.Text) - 1;
-					endp = Int64.Parse(sourceendpos.Text) - 1;
-				}catch{
-					DialogResult res = System.Windows.Forms.MessageBox.Show("Invalid input.(not a number) Do you want to submit the whole source code?",
-						"AtCoder Sample Tester", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-					if (res == DialogResult.Yes)
-					{
-						source = sr.ReadToEnd();
-						fs.Close(); sr.Close();
-						SubmitURLAsync(problempage.Text, source);
-					}
-					return;
-				}
-				int pos = 0;
-				for (; pos < beginp&&!sr.EndOfStream; ++pos) sr.ReadLine();
-				for (; pos < endp&& !sr.EndOfStream; ++pos) source += sr.ReadLine() + '\n';
-			}
-
-			fs.Close();sr.Close();
-
-			SubmitURLAsync(problempage.Text, source);
-		}
+		
 
 		public string Test(string inp,string outp,int num){
-			string command = @"Debug\ac3.exe";
+			string command = exefile.Text;
 
 			//DirectoryUtils.SafeCreateDirectory("ACST");
 			//File.WriteAllText("ACST\\in" + num + ".txt", inp);
@@ -328,7 +421,16 @@ namespace ACST
 
 			psInfo.RedirectStandardOutput = true;
 
-			System.Diagnostics.Process p = System.Diagnostics.Process.Start(psInfo);
+			System.Diagnostics.Process p;
+			try
+			{
+				p = System.Diagnostics.Process.Start(psInfo);
+			}catch{
+				System.Windows.MessageBox.Show(
+				string.Format(System.Globalization.CultureInfo.CurrentUICulture, ".exe file not found. Check file path below.\ncd="+ System.IO.Directory.GetCurrentDirectory()),
+				"AtCoder Sample Tester");
+				return " FE ";
+			}
 			inp = inp.Replace("\r\n", "\n");
 			string[] arr = inp.Split('\n');
 			foreach(string line in arr){
@@ -339,15 +441,15 @@ namespace ACST
 			if (!p.HasExited) {
 				p.Kill();
 				p.Close();
-				return "TLE";
+				return " TLE ";
 			}
 			
 			string output = p.StandardOutput.ReadToEnd();
 
 			output = output.Replace("\r\r\n", "\r\n");
 			p.Close();
-			if (outp == output) return "AC";
-			else return "WA";
+			if (outp == output) return " AC ";
+			else return " WA ";
 			//return "AC";
 		}
 	}
